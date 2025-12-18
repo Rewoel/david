@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dein Wichtelgeschenk</title>
+    <title>Dein weihnachtliches Wichtelgeschenk</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Quicksand:wght@300;500&display=swap');
@@ -112,6 +112,13 @@
         }
 
         .hidden { display: none; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
     </style>
 </head>
 <body>
@@ -124,7 +131,7 @@
         <div id="intro" class="card p-8 max-w-lg text-center">
             <h1 class="text-5xl mb-6 text-yellow-400">Frohe Weihnachten!</h1>
             <p class="text-lg md:text-xl leading-relaxed mb-8">
-                Hallo David! 
+                Hallo mein lieber Schatz! Dies ist dein digitales Wichtelgeschenk. 
                 <br><br>
                 Hinter diesem Spiel verbirgt sich eine Überraschung. Beantworte <strong>9 Fragen</strong> richtig, um alle Puzzleteile zu sammeln.
                 <br><br>
@@ -192,7 +199,8 @@
             { q: "In welcher Stadt wurde Jesus laut Bibel geboren?", a: ["Nazareth", "Jerusalem", "Bethlehem", "Rom"], correct: 2 }
         ];
 
-        const puzzleImg = "https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=600&h=600";
+        // Pfad zum lokalen Bild david.png
+        const puzzleImg = "david.png";
         
         let currentQuestion = 0;
         let piecesEarned = 0;
@@ -275,7 +283,6 @@
             document.getElementById('puzzle-container').classList.remove('hidden');
             
             const drawer = document.getElementById('pieces-drawer');
-            // Create pieces for the drawer
             const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
             
             indices.forEach(idx => {
@@ -284,7 +291,7 @@
                 piece.id = "piece-" + idx;
                 piece.style.backgroundImage = `url(${puzzleImg})`;
                 
-                const x = (idx % 3) * 50; // percentage based positioning
+                const x = (idx % 3) * 50; 
                 const y = Math.floor(idx / 3) * 50;
                 piece.style.backgroundPosition = `${x}% ${y}%`;
                 
@@ -297,17 +304,13 @@
         }
 
         function selectPiece(id) {
-            // Deselect previous
             if (selectedPieceId) {
                 document.getElementById(selectedPieceId).classList.remove('selected');
             }
-            
-            // If clicking same piece, just deselect
             if (selectedPieceId === id) {
                 selectedPieceId = null;
                 return;
             }
-
             selectedPieceId = id;
             document.getElementById(id).classList.add('selected');
         }
@@ -318,7 +321,6 @@
             const slot = document.querySelector(`.puzzle-slot[data-index="${slotIdx}"]`);
             const piece = document.getElementById(selectedPieceId);
 
-            // Move piece to slot
             if (slot.children.length === 0) {
                 piece.classList.remove('selected', 'w-[80px]', 'h-[80px]', 'md:w-[100px]', 'md:h-[100px]');
                 piece.classList.add('w-full', 'h-full');
@@ -326,7 +328,6 @@
                 selectedPieceId = null;
                 checkWin();
             } else {
-                // If slot occupied, move existing piece back to drawer and put new one in
                 const existingPiece = slot.children[0];
                 existingPiece.classList.add('w-[80px]', 'h-[80px]', 'md:w-[100px]', 'md:h-[100px]');
                 existingPiece.classList.remove('w-full', 'h-full');
