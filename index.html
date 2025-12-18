@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dein weihnachtliches Wichtelgeschenk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Quicksand:wght@300;500&display=swap');
+
+        :root {
+            --xmas-red: #b3000c;
+            --xmas-green: #165b33;
+            --xmas-gold: #f8b229;
+            --snow-white: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0a0f1d;
+            color: var(--snow-white);
+            overflow-x: hidden;
+            margin: 0;
+            touch-action: manipulation;
+        }
+
+        h1, h2, .font-xmas {
+            font-family: 'Mountains of Christmas', cursive;
+        }
+
+        /* Snow Effect */
+        .snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .snowflake {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0); }
+            100% { transform: translateY(110vh) translateX(20px); }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--xmas-gold);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: var(--xmas-red);
+            transition: all 0.3s ease;
+        }
+
+        /* Puzzle Grid */
+        #puzzle-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .puzzle-slot {
+            aspect-ratio: 1 / 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--xmas-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .puzzle-piece {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            background-size: 300% 300%;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s;
+        }
+
+        .puzzle-piece.selected {
+            outline: 3px solid var(--xmas-gold);
+            transform: scale(1.05);
+            z-index: 20;
+        }
+
+        .piece-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            min-height: 120px;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="snow-container" id="snow"></div>
+
+    <main class="relative z-10 min-h-screen flex items-center justify-center p-4">
+        
+        <!-- INTRO STEP -->
+        <div id="intro" class="card p-8 max-w-lg text-center">
+            <h1 class="text-5xl mb-6 text-yellow-400">Frohe Weihnachten!</h1>
+            <p class="text-lg md:text-xl leading-relaxed mb-8">
+                Hallo mein lieber Schatz! Dies ist dein digitales Wichtelgeschenk. 
+                <br><br>
+                Hinter diesem Spiel verbirgt sich eine Überraschung. Beantworte <strong>9 Fragen</strong> richtig, um alle Puzzleteile zu sammeln.
+                <br><br>
+                Tippe am Ende ein Teil und dann ein Feld an, um es zu platzieren!
+            </p>
+            <button onclick="startQuiz()" class="btn-primary px-8 py-3 rounded-full text-xl font-bold text-white shadow-lg">
+                Los geht's! 🎄
+            </button>
+        </div>
+
+        <!-- QUIZ STEP -->
+        <div id="quiz-container" class="card p-6 md:p-8 max-w-xl w-full hidden">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xs md:text-sm uppercase tracking-widest text-yellow-500 font-bold">Frage <span id="current-q-num">1</span> von 9</span>
+                <div class="flex gap-1" id="progress-dots"></div>
+            </div>
+            
+            <h2 id="question-text" class="text-2xl md:text-3xl mb-8">Lädt Frage...</h2>
+            
+            <div id="options" class="grid grid-cols-1 gap-4"></div>
+
+            <div id="feedback" class="mt-6 text-center text-lg font-bold min-h-[1.5rem]"></div>
+        </div>
+
+        <!-- PUZZLE STEP -->
+        <div id="puzzle-container" class="card p-6 md:p-8 max-w-2xl w-full hidden text-center">
+            <h2 class="text-4xl mb-2 text-yellow-400">Das große Finale!</h2>
+            <p class="mb-6 text-sm md:text-base">Wähle ein Teil aus und tippe auf ein Feld im Raster.</p>
+            
+            <div id="puzzle-board">
+                <!-- 9 Slots -->
+                <div class="puzzle-slot" data-index="0" onclick="handleSlotClick(0)"></div>
+                <div class="puzzle-slot" data-index="1" onclick="handleSlotClick(1)"></div>
+                <div class="puzzle-slot" data-index="2" onclick="handleSlotClick(2)"></div>
+                <div class="puzzle-slot" data-index="3" onclick="handleSlotClick(3)"></div>
+                <div class="puzzle-slot" data-index="4" onclick="handleSlotClick(4)"></div>
+                <div class="puzzle-slot" data-index="5" onclick="handleSlotClick(5)"></div>
+                <div class="puzzle-slot" data-index="6" onclick="handleSlotClick(6)"></div>
+                <div class="puzzle-slot" data-index="7" onclick="handleSlotClick(7)"></div>
+                <div class="puzzle-slot" data-index="8" onclick="handleSlotClick(8)"></div>
+            </div>
+
+            <div id="pieces-drawer" class="piece-container">
+                <!-- Pieces will be injected here -->
+            </div>
+
+            <div id="final-message" class="mt-8 hidden p-4 bg-green-900/40 rounded-lg border border-green-500 animate-bounce">
+                <h3 class="text-3xl text-green-400 font-xmas">Geschafft! ❤️</h3>
+                <p class="text-xl mt-2">Gutschein für ein gemeinsames Weihnachtsessen & Kinoabend!</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const questions = [
+            { q: "In welchem Land wurde der Adventskranz erfunden?", a: ["Deutschland", "Österreich", "Schweden", "Schweiz"], correct: 0 },
+            { q: "Wie viele Rentiere ziehen den Schlitten des Weihnachtsmanns (ohne Rudolph)?", a: ["6", "7", "8", "9"], correct: 2 },
+            { q: "Welches Gewürz darf in echtem Aachener Printen-Teig nicht fehlen?", a: ["Curry", "Zimt", "Pfeffer", "Koriander"], correct: 1 },
+            { q: "Was bedeutet das Wort 'Advent' übersetzt?", a: ["Geburt", "Ankunft", "Warten", "Licht"], correct: 1 },
+            { q: "Welches Lied ist das weltweit meistverkaufte Weihnachtslied?", a: ["Last Christmas", "Jingle Bells", "White Christmas", "O Tannenbaum"], correct: 2 },
+            { q: "Welcher Heilige war das Vorbild für den Nikolaus?", a: ["St. Martin", "St. Benedikt", "St. Nikolaus von Myra", "St. Stephan"], correct: 2 },
+            { q: "Aus welchem Land stammt der Brauch des geschmückten Weihnachtsbaums?", a: ["Frankreich", "Deutschland", "Russland", "USA"], correct: 1 },
+            { q: "Wie heißt der Grinch-Hund?", a: ["Max", "Bello", "Buddy", "Rocky"], correct: 0 },
+            { q: "In welcher Stadt wurde Jesus laut Bibel geboren?", a: ["Nazareth", "Jerusalem", "Bethlehem", "Rom"], correct: 2 }
+        ];
+
+        const puzzleImg = "https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=600&h=600";
+        
+        let currentQuestion = 0;
+        let piecesEarned = 0;
+        let selectedPieceId = null;
+
+        function createSnow() {
+            const container = document.getElementById('snow');
+            for(let i=0; i<40; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.style.width = Math.random() * 4 + 2 + 'px';
+                flake.style.height = flake.style.width;
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = Math.random() * 3 + 3 + 's';
+                flake.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(flake);
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('current-q-num').innerText = currentQuestion + 1;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.a.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white/10 hover:bg-white/20 p-4 rounded-xl text-left border border-white/20 transition-all active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(btn);
+            });
+
+            const dots = document.getElementById('progress-dots');
+            dots.innerHTML = '';
+            for(let i=0; i<9; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 md:w-3 md:h-3 rounded-full ${i < piecesEarned ? 'bg-yellow-400' : 'bg-white/20'}`;
+                dots.appendChild(dot);
+            }
+        }
+
+        function checkAnswer(idx) {
+            const q = questions[currentQuestion];
+            const feedback = document.getElementById('feedback');
+            
+            if(idx === q.correct) {
+                feedback.innerText = "Richtig! ✨";
+                feedback.className = "mt-6 text-center text-lg font-bold text-green-400";
+                piecesEarned++;
+                
+                setTimeout(() => {
+                    if(currentQuestion < questions.length - 1) {
+                        currentQuestion++;
+                        feedback.innerText = "";
+                        renderQuestion();
+                    } else {
+                        startPuzzle();
+                    }
+                }, 1000);
+            } else {
+                feedback.innerText = "Versuch es nochmal! ❄️";
+                feedback.className = "mt-6 text-center text-lg font-bold text-red-400";
+                const container = document.getElementById('quiz-container');
+                container.classList.add('animate-shake');
+                setTimeout(() => container.classList.remove('animate-shake'), 500);
+            }
+        }
+
+        function startPuzzle() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('puzzle-container').classList.remove('hidden');
+            
+            const drawer = document.getElementById('pieces-drawer');
+            // Create pieces for the drawer
+            const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
+            
+            indices.forEach(idx => {
+                const piece = document.createElement('div');
+                piece.className = "puzzle-piece w-[80px] h-[80px] md:w-[100px] md:h-[100px]";
+                piece.id = "piece-" + idx;
+                piece.style.backgroundImage = `url(${puzzleImg})`;
+                
+                const x = (idx % 3) * 50; // percentage based positioning
+                const y = Math.floor(idx / 3) * 50;
+                piece.style.backgroundPosition = `${x}% ${y}%`;
+                
+                piece.onclick = (e) => {
+                    e.stopPropagation();
+                    selectPiece(piece.id);
+                };
+                drawer.appendChild(piece);
+            });
+        }
+
+        function selectPiece(id) {
+            // Deselect previous
+            if (selectedPieceId) {
+                document.getElementById(selectedPieceId).classList.remove('selected');
+            }
+            
+            // If clicking same piece, just deselect
+            if (selectedPieceId === id) {
+                selectedPieceId = null;
+                return;
+            }
+
+            selectedPieceId = id;
+            document.getElementById(id).classList.add('selected');
+        }
+
+        function handleSlotClick(slotIdx) {
+            if (!selectedPieceId) return;
+
+            const slot = document.querySelector(`.puzzle-slot[data-index="${slotIdx}"]`);
+            const piece = document.getElementById(selectedPieceId);
+
+            // Move piece to slot
+            if (slot.children.length === 0) {
+                piece.classList.remove('selected', 'w-[80px]', 'h-[80px]', 'md:w-[100px]', 'md:h-[100px]');
+                piece.classList.add('w-full', 'h-full');
+                slot.appendChild(piece);
+                selectedPieceId = null;
+                checkWin();
+            } else {
+                // If slot occupied, move existing piece back to drawer and put new one in
+                const existingPiece = slot.children[0];
+                existingPiece.classList.add('w-[80px]', 'h-[80px]', 'md:w-[100px]', 'md:h-[100px]');
+                existingPiece.classList.remove('w-full', 'h-full');
+                document.getElementById('pieces-drawer').appendChild(existingPiece);
+                
+                piece.classList.remove('selected', 'w-[80px]', 'h-[80px]', 'md:w-[100px]', 'md:h-[100px]');
+                piece.classList.add('w-full', 'h-full');
+                slot.appendChild(piece);
+                selectedPieceId = null;
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            const slots = document.querySelectorAll('.puzzle-slot');
+            let correctCount = 0;
+            
+            slots.forEach(slot => {
+                if (slot.children.length > 0) {
+                    const pieceId = slot.children[0].id;
+                    const pieceIdx = pieceId.split('-')[1];
+                    const slotIdx = slot.getAttribute('data-index');
+                    if (pieceIdx === slotIdx) {
+                        correctCount++;
+                    }
+                }
+            });
+
+            if (correctCount === 9) {
+                document.getElementById('final-message').classList.remove('hidden');
+                document.getElementById('puzzle-board').style.boxShadow = "0 0 40px #f8b229";
+            }
+        }
+
+        window.onload = createSnow;
+    </script>
+</body>
+</html>
