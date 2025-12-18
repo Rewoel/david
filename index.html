@@ -75,6 +75,7 @@
             border-radius: 8px;
             max-width: 320px;
             margin: 0 auto;
+            transition: all 0.5s ease;
         }
 
         .puzzle-slot {
@@ -119,6 +120,31 @@
             75% { transform: translateX(5px); }
         }
         .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+        /* Confetti Effect */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--xmas-gold);
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* Final Image Reveal */
+        #final-image-display {
+            max-width: 320px;
+            margin: 0 auto;
+            border: 4px solid var(--xmas-gold);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(248, 178, 41, 0.6);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -158,11 +184,11 @@
 
         <!-- PUZZLE STEP -->
         <div id="puzzle-container" class="card p-6 md:p-8 max-w-2xl w-full hidden text-center">
-            <h2 class="text-4xl mb-2 text-yellow-400">Das große Finale!</h2>
-            <p class="mb-6 text-sm md:text-base">Wähle ein Teil aus und tippe auf ein Feld im Raster.</p>
+            <h2 id="puzzle-title" class="text-4xl mb-2 text-yellow-400">Das große Finale!</h2>
+            <p id="puzzle-instr" class="mb-6 text-sm md:text-base">Wähle ein Teil aus und tippe auf ein Feld im Raster.</p>
             
+            <!-- Puzzle Board wird ausgeblendet wenn fertig -->
             <div id="puzzle-board">
-                <!-- 9 Slots -->
                 <div class="puzzle-slot" data-index="0" onclick="handleSlotClick(0)"></div>
                 <div class="puzzle-slot" data-index="1" onclick="handleSlotClick(1)"></div>
                 <div class="puzzle-slot" data-index="2" onclick="handleSlotClick(2)"></div>
@@ -174,13 +200,30 @@
                 <div class="puzzle-slot" data-index="8" onclick="handleSlotClick(8)"></div>
             </div>
 
+            <!-- Platzhalter für das fertige Bild -->
+            <div id="final-image-display" class="hidden overflow-hidden">
+                <img id="complete-img" src="david.png" alt="Gelöstes Puzzle" class="w-full h-auto block">
+            </div>
+
             <div id="pieces-drawer" class="piece-container">
                 <!-- Pieces will be injected here -->
             </div>
 
-            <div id="final-message" class="mt-8 hidden p-4 bg-green-900/40 rounded-lg border border-green-500 animate-bounce">
-                <h3 class="text-3xl text-green-400 font-xmas">Geschafft! ❤️</h3>
-                <p class="text-xl mt-2">Gutschein für ein gemeinsames Weihnachtsessen & Kinoabend!</p>
+            <div id="final-message" class="mt-8 hidden p-6 bg-white/10 rounded-2xl border-2 border-yellow-400 shadow-[0_0_20px_rgba(248,178,41,0.5)]">
+                <h3 class="text-4xl text-yellow-400 font-xmas mb-4">Herzlichen Glückwunsch! ❤️</h3>
+                <div class="text-xl md:text-2xl bg-red-700/50 p-4 rounded-xl border border-white/20">
+                    <p class="mb-2">Du hast es geschafft!</p>
+                    <p class="font-bold text-white uppercase tracking-wider">Gutschein für ein gemeinsames Weihnachtsessen & Kinoabend!</p>
+                    <p class="mt-4 text-sm italic">Ich hab dich ganz doll lieb!</p>
+                </div>
+                
+                <!-- Download Button -->
+                <div class="mt-6">
+                    <a id="download-link" href="david.png" download="david.png" class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded-full transition-all active:scale-95 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Bild herunterladen
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -199,7 +242,6 @@
             { q: "In welcher Stadt wurde Jesus laut Bibel geboren?", a: ["Nazareth", "Jerusalem", "Bethlehem", "Rom"], correct: 2 }
         ];
 
-        // Pfad zum lokalen Bild david.png
         const puzzleImg = "david.png";
         
         let currentQuestion = 0;
@@ -357,8 +399,48 @@
             });
 
             if (correctCount === 9) {
+                triggerWin();
+            }
+        }
+
+        function triggerWin() {
+            // Verstecke Puzzle-Board und Steuerung
+            document.getElementById('puzzle-board').classList.add('hidden');
+            document.getElementById('pieces-drawer').classList.add('hidden');
+            document.getElementById('puzzle-instr').classList.add('hidden');
+            
+            // Zeige das vollständige Bild
+            document.getElementById('final-image-display').classList.remove('hidden');
+            document.getElementById('puzzle-title').innerText = "Geschafft!";
+            
+            setTimeout(() => {
                 document.getElementById('final-message').classList.remove('hidden');
-                document.getElementById('puzzle-board').style.boxShadow = "0 0 40px #f8b229";
+                spawnConfetti();
+            }, 500);
+        }
+
+        function spawnConfetti() {
+            for(let i=0; i<100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = ['#b3000c', '#165b33', '#f8b229', '#ffffff'][Math.floor(Math.random()*4)];
+                confetti.style.width = Math.random() * 8 + 4 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.transform = `rotate(${Math.random()*360}deg)`;
+                
+                document.body.appendChild(confetti);
+
+                const animation = confetti.animate([
+                    { transform: `translate3d(0, 0, 0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate3d(${(Math.random()-0.5)*200}px, 100vh, 0) rotate(${Math.random()*720}deg)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 3000 + 2000,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                });
+
+                animation.onfinish = () => confetti.remove();
             }
         }
 
